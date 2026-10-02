@@ -1,0 +1,1 @@
+import{n as e}from"./strings-eCr1Agbr.js";import{F as t,p as n,t as r}from"./session-CRcC1Itk.js";import{startPreview as i}from"./preview-DmNc19lR.js";t([]),n(),e();var a=r();a.flush(),i({entry:`url`,uploader:a,onBack:()=>location.assign(location.pathname)});

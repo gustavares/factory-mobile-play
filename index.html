@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#e4ebe2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BELTFED" />
+    <meta name="format-detection" content="telephone=no" />
+    <!-- Absolute public paths: Vite prefixes them with `base` (/factory-mobile-play/ on Pages). -->
+    <link rel="manifest" href="/factory-mobile-play/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/factory-mobile-play/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/factory-mobile-play/icons/icon-192.png" />
+    <title>BELTFED</title>
+    <script type="module" crossorigin src="/factory-mobile-play/assets/index-LRfKN5cX.js"></script>
+    <link rel="stylesheet" crossorigin href="/factory-mobile-play/assets/index-C-t_hUpQ.css">
+  </head>
+  <body>
+    <div id="game"></div>
+
+    <header id="topbar">
+      <div class="stat ore"><b id="ore">0</b><small data-s="top.ore"></small></div>
+      <div class="stat core">
+        <div id="core-bar"><div id="core-fill"></div></div>
+        <small id="core-text" data-s="top.core"></small>
+      </div>
+      <div class="stat wave"><b id="wave">&nbsp;</b><small id="wave-next">&nbsp;</small></div>
+      <button id="flag" type="button" data-s-aria="top.flagAria">⚑</button>
+      <button id="settings-btn" type="button" data-s-aria="top.settingsAria">⚙</button>
+    </header>
+
+    <div id="flag-chips" hidden>
+      <button type="button" data-tag="confusing" data-s="flag.tags.confusing"></button>
+      <button type="button" data-tag="unfair" data-s="flag.tags.unfair"></button>
+      <button type="button" data-tag="fiddly" data-s="flag.tags.fiddly"></button>
+      <button type="button" data-tag="boring" data-s="flag.tags.boring"></button>
+      <button type="button" data-tag="fun" data-s="flag.tags.fun"></button>
+    </div>
+
+    <div id="toast" role="status"></div>
+
+    <!--
+      The Notice (strings.ts S.notice): the Company's optional wave-start toast, at most one per wave.
+      Code fills #notice-text and unhides it; only the dismiss button takes a touch.
+    -->
+    <div id="notice" role="status" hidden>
+      <b data-s="notice.label"></b> <span id="notice-text"></span>
+      <small class="sig" data-s="notice.signature"></small>
+      <button id="notice-close" type="button" data-s-aria="notice.closeAria">
+        <svg viewBox="0 0 12 12"><path d="M2 2l8 8M10 2 2 10" stroke="#c9c6bd" stroke-width="1.6" stroke-linecap="round" /></svg>
+      </button>
+    </div>
+
+    <!-- Focus time (⚙ flag): a cool edge while the game runs slow under a building finger. Never takes a touch. -->
+    <div id="focus-edge" aria-hidden="true"></div>
+
+    <!-- Context ring (tools.ts, ring.ts): no tool picked, tap a building. Placed beside it by ring.ts. -->
+    <div id="ring" role="menu" data-s-aria="ring.aria" hidden>
+      <div id="ring-text" hidden></div>
+      <div class="ring-buttons">
+        <button id="ring-rotate" type="button" role="menuitem">
+          <svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 0 8 8h-3a5 5 0 1 1-5-5v3l5-4.5L12 1z" fill="#e9eef5" /></svg>
+          <span data-s="ring.rotate"></span>
+        </button>
+        <button id="ring-remove" type="button" role="menuitem">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="#e2574c" stroke-width="3.5" stroke-linecap="round" /></svg>
+          <span data-s="ring.remove"></span><small id="ring-refund">&nbsp;</small>
+        </button>
+        <button id="ring-info" type="button" role="menuitem" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="#2fb6c9" stroke-width="2.5" /><rect x="10.6" y="10" width="2.8" height="8" rx="1" fill="#2fb6c9" /><circle cx="12" cy="6.8" r="1.7" fill="#2fb6c9" /></svg>
+          <span data-s="ring.info"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dwell magnifier (magnifier.ts): ⚙ A/B flag. Never takes a touch. -->
+    <div id="magnifier" hidden><canvas id="magnifier-canvas"></canvas></div>
+
+    <footer id="bottombar">
+      <!-- In the bar, not over the board: the grid refits around it, so it never hides a cell. -->
+      <button id="upload-badge" type="button" data-s="hotbar.uploadsOff" hidden></button>
+      <div id="hint">&nbsp;</div>
+      <!-- Open Ground (openCamera.ts): glide to a front, or Look at the whole map. Shown only on an open map. -->
+      <div id="cam-row" hidden>
+        <button type="button" class="front-chip" data-front="north"><span data-s="og.chips.north"></span></button>
+        <button type="button" class="front-chip" data-front="east"><span data-s="og.chips.east"></span></button>
+        <button type="button" id="look" aria-pressed="false" data-s-aria="og.lookAria">
+          <svg viewBox="0 0 24 24"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" stroke="#6ad6e6" stroke-width="2.2" fill="none" stroke-linecap="round" /><rect x="8.5" y="8.5" width="7" height="7" rx="1.2" fill="none" stroke="#e9eef5" stroke-width="1.8" /></svg>
+          <span data-s="og.look"></span>
+        </button>
+      </div>
+      <!-- Pacing (research §3.2, §8 step 7): what the next wave brings, 1x/2x, and Call (a hold). ⚙ → Left-handed mirrors it. -->
+      <div id="pace">
+        <div id="wave-chip" role="status">
+          <small id="chip-title">&nbsp;</small>
+          <span class="chip-row">
+            <span class="chip-packs">
+              <!-- A mower crew: three Company-yellow dots with a dark outline (colour and silhouette). -->
+              <svg viewBox="0 0 24 16"><g fill="#e0b22e" stroke="#1b1c1f" stroke-width="1.2"><circle cx="4.5" cy="8" r="3.2" /><circle cx="12" cy="8" r="3.2" /><circle cx="19.5" cy="8" r="3.2" /></g></svg>
+              <b id="chip-packs">&nbsp;</b>
+            </span>
+            <span class="chip-brutes" id="chip-brutes-wrap">
+              <!-- A paver: one yellow square with a black hazard stripe. -->
+              <svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" fill="#e0b22e" stroke="#1b1c1f" stroke-width="1.2" /><path d="M5.2 13.4 13.4 5.2v4.2l-4 4z" fill="#1b1c1f" /></svg>
+              <b id="chip-brutes">&nbsp;</b>
+            </span>
+          </span>
+        </div>
+        <button id="speed" type="button" aria-pressed="false" data-s-aria="pace.speedAria">
+          <svg viewBox="0 0 24 24"><path d="M3 5l8 7-8 7zM12 5l8 7-8 7z" fill="#2fb6c9" /></svg>
+          <span id="speed-label">&nbsp;</span>
+        </button>
+        <button id="call-wave" type="button" data-s-aria="pace.callAria">
+          <svg class="hold-ring" viewBox="0 0 36 36">
+            <circle class="track" cx="18" cy="18" r="15" />
+            <circle class="fill" cx="18" cy="18" r="15" pathLength="100" />
+            <path d="M18 10.5l6 8h-4v6h-4v-6h-4z" fill="#0f1828" />
+          </svg>
+          <span class="call-text"><b id="call-label" data-s="pace.call"></b><small id="call-bonus">&nbsp;</small></span>
+        </button>
+      </div>
+      <nav id="hotbar">
+        <button type="button" data-tool="belt" aria-pressed="true">
+          <!-- A mag-rail: navy slab, pearl edges, mint seam. -->
+          <svg viewBox="0 0 22 22"><rect x="4" y="1" width="14" height="20" rx="3" fill="#2b3f63" /><rect x="4" y="1" width="2.6" height="20" rx="1.3" fill="#cdd5d1" /><rect x="15.4" y="1" width="2.6" height="20" rx="1.3" fill="#cdd5d1" /><rect x="10" y="1" width="2.2" height="20" fill="#7ff0cf" /><path d="M7.5 12.5l3.6-3.6 3.6 3.6" stroke="#eef1ec" stroke-width="1.6" fill="none" /></svg>
+          <span class="name" data-s="hotbar.belt"></span><span class="cost" data-cost="belt"></span>
+        </button>
+        <button type="button" data-tool="drill" aria-pressed="false">
+          <!-- A printer-drill from above: pearl disc, algae arc, terracotta drum with its arrow. -->
+          <svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="9.6" fill="#eef1ec" stroke="#b9c2bd" stroke-width="1" /><path d="M3.6 7.2A9 9 0 0 1 18.4 7.2" stroke="#3fc27a" stroke-width="2.4" fill="none" /><circle cx="11" cy="11" r="6.2" fill="none" stroke="#cdd5d1" stroke-width="1.4" /><circle cx="11" cy="11.5" r="4.2" fill="#c4502e" /><path d="M11 9.4l2 3.2h-4z" fill="#eef1ec" /></svg>
+          <span class="name" data-s="hotbar.drill"></span><span class="cost" data-cost="drill.iron"></span>
+        </button>
+        <button type="button" data-tool="gun" aria-pressed="false">
+          <!-- A slinger from above: pearl collar, six cobalt blades with mint rims, the tube with a clay core. -->
+          <svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="9.8" fill="#eef1ec" stroke="#b9c2bd" stroke-width="1" /><g transform="rotate(30 11 11)"><path d="M10.1 8.4 11.9 8.4 13.5 2.3 8.5 2.3z" fill="#3f6fd8" /><path d="M8.5 2.3 13.5 2.3 13.3 3.1 8.7 3.1z" fill="#7ff0cf" /></g><g transform="rotate(90 11 11)"><path d="M10.1 8.4 11.9 8.4 13.5 2.3 8.5 2.3z" fill="#3f6fd8" /><path d="M8.5 2.3 13.5 2.3 13.3 3.1 8.7 3.1z" fill="#7ff0cf" /></g><g transform="rotate(150 11 11)"><path d="M10.1 8.4 11.9 8.4 13.5 2.3 8.5 2.3z" fill="#3f6fd8" /><path d="M8.5 2.3 13.5 2.3 13.3 3.1 8.7 3.1z" fill="#7ff0cf" /></g><g transform="rotate(210 11 11)"><path d="M10.1 8.4 11.9 8.4 13.5 2.3 8.5 2.3z" fill="#3f6fd8" /><path d="M8.5 2.3 13.5 2.3 13.3 3.1 8.7 3.1z" fill="#7ff0cf" /></g><g transform="rotate(270 11 11)"><path d="M10.1 8.4 11.9 8.4 13.5 2.3 8.5 2.3z" fill="#3f6fd8" /><path d="M8.5 2.3 13.5 2.3 13.3 3.1 8.7 3.1z" fill="#7ff0cf" /></g><g transform="rotate(330 11 11)"><path d="M10.1 8.4 11.9 8.4 13.5 2.3 8.5 2.3z" fill="#3f6fd8" /><path d="M8.5 2.3 13.5 2.3 13.3 3.1 8.7 3.1z" fill="#7ff0cf" /></g><g transform="rotate(-35 11 11)"><rect x="8.6" y="6" width="4.8" height="11" rx="2.2" fill="#cdd5d1" /><rect x="10.1" y="6.8" width="1.8" height="6.5" rx="0.9" fill="#7fa3c6" /><rect x="8.6" y="14" width="4.8" height="2" fill="#27365e" /></g></svg>
+          <span class="name" data-s="hotbar.gun"></span><span class="cost" data-cost="gun"></span>
+        </button>
+        <button type="button" data-tool="remove" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19" stroke="#e2574c" stroke-width="3.5" stroke-linecap="round" /></svg>
+          <span class="name" data-s="hotbar.remove"></span><span class="cost" data-s="hotbar.refund"></span>
+        </button>
+        <button type="button" id="undo">
+          <svg viewBox="0 0 24 24"><path d="M9 5 3 10l6 5v-3.5c5 0 8 1.5 10 6 0-6-3-10-10-10z" fill="#93a3b8" /></svg>
+          <span class="name" data-s="hotbar.undo"></span><span class="cost" id="undo-count">0</span>
+        </button>
+        <!-- Pause sits in thumb reach, not in the top bar (research §3.2). ⚙ → Left-handed layout mirrors this row. -->
+        <button type="button" id="pause-btn" data-s-aria="hotbar.pauseAria">
+          <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4.5" height="14" rx="1.2" fill="#93a3b8" /><rect x="13.5" y="5" width="4.5" height="14" rx="1.2" fill="#93a3b8" /></svg>
+        </button>
+      </nav>
+    </footer>
+
+    <section id="howto" class="sheet" hidden>
+      <div class="card">
+        <h2 data-s="howto.title"></h2>
+        <ol>
+          <li data-s-rich="howto.rich.step1"></li>
+          <li data-s-rich="howto.rich.step2"></li>
+          <li data-s-rich="howto.rich.step3"></li>
+          <li data-s-rich="howto.rich.step4"></li>
+          <li data-s-rich="howto.rich.step5"></li>
+          <li data-s-rich="howto.rich.pace"></li>
+          <li data-s-rich="howto.rich.step6"></li>
+          <li data-s-rich="howto.rich.step7"></li>
+          <li data-s-rich="howto.rich.step8"></li>
+        </ol>
+        <button id="howto-close" type="button" class="primary full" data-s="howto.close"></button>
+      </div>
+    </section>
+
+    <section id="settings" class="sheet" hidden>
+      <div class="card">
+        <h2 data-s="settings.title"></h2>
+        <p data-s="settings.intro"></p>
+        <input id="token-input" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-s-placeholder="settings.tokenPlaceholder" />
+        <div class="row">
+          <button id="token-save" type="button" class="primary" data-s="settings.saveToken"></button>
+          <button id="test-upload" type="button" data-s="settings.uploadNow"></button>
+        </div>
+        <div id="upload-status"></div>
+        <p class="muted" id="build-info"></p>
+        <!-- Side by side (each wraps to two or three lines) so Close stays on screen on a 667 pt phone. -->
+        <div class="row toggles">
+          <button id="left-hand" type="button" aria-pressed="false">&nbsp;</button>
+          <button id="magnifier-toggle" type="button" aria-pressed="false">&nbsp;</button>
+          <button id="camera-toggle" type="button">&nbsp;</button>
+          <button id="focus-toggle" type="button" aria-pressed="false">&nbsp;</button>
+          <button id="call-mode" type="button">&nbsp;</button>
+          <!-- The Open Ground camera preview (src/og/), loaded on demand over the paused run: the grid's sixth cell, so ⚙ keeps its height. -->
+          <button id="og-open" type="button" data-s="settings.ogPreview"></button>
+        </div>
+        <!-- Side by side, so ⚙ keeps its height on a 667 pt phone. The map switch reloads on the other board; each board keeps its own run. -->
+        <div class="row tools-row">
+          <button id="perf-test" type="button" data-s="settings.perfTest"></button>
+          <button id="map-switch" type="button">&nbsp;</button>
+        </div>
+        <button id="settings-close" type="button" class="full" data-s="settings.close"></button>
+      </div>
+    </section>
+
+    <section id="pause" class="sheet" hidden>
+      <div class="card">
+        <h2 data-s="pause.title"></h2>
+        <p id="pause-run">&nbsp;</p>
+        <p class="muted" id="pause-note">&nbsp;</p>
+        <button id="pause-resume" type="button" class="primary full" data-s="pause.resume"></button>
+        <button id="give-up" type="button" class="danger full" data-s="pause.giveUp"></button>
+      </div>
+    </section>
+
+    <section id="end" class="sheet" hidden>
+      <div class="card">
+        <div id="end-result" class="result">&nbsp;</div>
+        <!-- Filled by code per result (strings.ts S.end.sub, S.end.lostLine); hidden when there is none. -->
+        <p id="end-sub" class="company" hidden></p>
+        <p id="end-line" hidden></p>
+        <div class="stats">
+          <div><b id="end-wave">0</b><small data-s="end.wave"></small></div>
+          <div><b id="end-time">0:00</b><small data-s="end.time"></small></div>
+          <div><b id="end-kills">0</b><small data-s="end.kills"></small></div>
+          <div><b id="end-starved">0</b><small data-s="end.starved"></small></div>
+        </div>
+        <div class="row">
+          <button type="button" data-rating="bad" aria-pressed="false" data-s="end.bad"></button>
+          <button type="button" data-rating="ok" aria-pressed="false" data-s="end.ok"></button>
+          <button type="button" data-rating="good" aria-pressed="false" data-s="end.good"></button>
+        </div>
+        <textarea id="end-note" data-s-placeholder="end.notePlaceholder"></textarea>
+        <div id="end-status"></div>
+        <button id="end-send" type="button" class="primary full" data-s="end.send"></button>
+      </div>
+    </section>
+
+    <!-- Performance test (?stress, src/stress/scene.ts): the game above stays unused on that page. -->
+    <section id="stress" class="sheet" hidden>
+      <div class="card">
+        <h2 data-s="stress.title"></h2>
+        <p data-s="stress.intro"></p>
+        <p class="muted" data-s="stress.tips"></p>
+        <div class="row">
+          <button type="button" data-duration="full" aria-pressed="true" data-s="stress.full"></button>
+          <button type="button" data-duration="quick" aria-pressed="false" data-s="stress.quick"></button>
+        </div>
+        <button id="stress-start" type="button" class="primary full" data-s="stress.start"></button>
+        <button id="stress-back" type="button" class="full" data-s="stress.back"></button>
+      </div>
+    </section>
+
+    <div id="stress-hud" hidden>
+      <b id="stress-fps">&nbsp;</b>
+      <small id="stress-tier">&nbsp;</small>
+      <small id="stress-left">&nbsp;</small>
+      <button id="stress-stop" type="button" data-s="stress.stop"></button>
+    </div>
+
+    <section id="stress-end" class="sheet" hidden>
+      <div class="card">
+        <h2 id="stress-end-title">&nbsp;</h2>
+        <div id="stress-results"></div>
+        <p data-s="stress.heat"></p>
+        <div class="row">
+          <button type="button" data-heat="cool" aria-pressed="false" data-s="stress.cool"></button>
+          <button type="button" data-heat="warm" aria-pressed="false" data-s="stress.warm"></button>
+          <button type="button" data-heat="hot" aria-pressed="false" data-s="stress.hot"></button>
+        </div>
+        <div id="stress-status"></div>
+        <button id="stress-send" type="button" class="primary full" data-s="stress.send"></button>
+      </div>
+    </section>
+
+    <!-- Shown by CSS in a short landscape viewport (a rotated phone), where the board is unplayably small; main.ts pauses the run meanwhile. -->
+    <div id="rotate" role="alert">
+      <div class="phone"></div>
+      <b data-s="rotate.title"></b>
+      <small data-s="rotate.body"></small>
+    </div>
+
+  </body>
+</html>
